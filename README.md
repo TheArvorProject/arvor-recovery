@@ -27,6 +27,20 @@
 
 ---
 
+## Default Credentials
+
+Following a factory reinstallation or when accessing the Rescue Chroot, default system accounts are configured as:
+
+| User | Password | Permissions | Description |
+| --- | --- | --- | --- |
+| `root` | `root` | Superuser | Root administrative account |
+| `arvor` | `arvor` | `sudo` | Default standard user with sudo privileges |
+
+> [!TIP]
+> It is strongly recommended to change these default passwords immediately after initial boot or restoration using the `passwd` command (`passwd` and `passwd arvor`).
+
+---
+
 ## Keyboard Controls
 
 | Key | Action |
