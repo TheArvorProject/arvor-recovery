@@ -1,0 +1,62 @@
+#!/usr/bin/env python3
+"""
+Arvor Linux Recovery Mode - Main Executable Entrypoint.
+100% Graphical Recovery Environment (Qt6 + Official SVG Vector Logo).
+"""
+
+import argparse
+import os
+import sys
+
+# Ensure project root is in sys.path
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, PROJECT_ROOT)
+
+from core.sysinfo import SysInfoCollector
+from ui.gui import run_gui
+
+
+def parse_args():
+    parser = argparse.ArgumentParser(
+        description="Arvor Linux Recovery Mode - Graphical System Rescue, Snapshot Manager & Factory Restore"
+    )
+    parser.add_argument(
+        "-s", "--simulate",
+        action="store_true",
+        help="Run in simulation mode (safe testing without real disk modifications)"
+    )
+    parser.add_argument(
+        "-v", "--version",
+        action="store_true",
+        help="Print version and exit"
+    )
+    return parser.parse_args()
+
+
+def main():
+    args = parse_args()
+
+    if args.version:
+        sysinfo = SysInfoCollector(simulate=True)
+        print(f"Arvor Linux Recovery Mode {sysinfo.build_version}")
+        sys.exit(0)
+
+    # Check root privileges if not simulating
+    if not args.simulate and os.geteuid() != 0:
+        print("\033[1;33m[NOTICE]\033[0m Arvor Recovery requires root privileges to manage LVM volumes and disks.")
+        print("Launching in --simulate mode for evaluation. Use 'sudo arvor-recovery' for live system operations.\n")
+        args.simulate = True
+
+    try:
+        sys.exit(run_gui(simulate=args.simulate))
+    except KeyboardInterrupt:
+        print("\nArvor Recovery Mode terminated by user.")
+        sys.exit(0)
+    except Exception as e:
+        print(f"\n[FATAL ERROR] {e}", file=sys.stderr)
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()

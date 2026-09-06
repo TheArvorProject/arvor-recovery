@@ -1,0 +1,9 @@
+# Python bytecode & cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Temporary & build artifacts
+*.squashfs
+/tmp/
+.pytest_cache/
