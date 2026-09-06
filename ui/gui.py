@@ -489,6 +489,8 @@ class RecoveryMainWindow(QMainWindow):
                 warning_lines=[
                     "THIS WILL FORMAT AND REINSTALL THE ROOT SYSTEM!",
                     "All user data on the main system partition will be replaced.",
+                    "The pristine base system will be restored via rsync from Recovery.",
+                    "Default credentials after restore: root:root and arvor:arvor (sudo).",
                     "The dedicated Recovery Partition will remain untouched."
                 ],
                 target_name=f"/dev/{self.active_vg}/root",
@@ -496,16 +498,26 @@ class RecoveryMainWindow(QMainWindow):
             )
             if dlg.exec() == QDialog.DialogCode.Accepted:
                 self.stack.setCurrentIndex(2)
-                self.reinstall_mgr.reinstall_system(
+                success = self.reinstall_mgr.reinstall_system(
                     disk_dev="/dev/nvme0n1",
                     recovery_part="/dev/nvme0n1p3",
                     root_lv=f"/dev/{self.active_vg}/root"
                 )
                 self.stack.setCurrentIndex(0)
-                QMessageBox.information(
-                    self, "Reinstall Complete",
-                    "Arvor Linux was successfully restored from recovery storage!\nPress OK to return to main menu."
-                )
+                if success:
+                    QMessageBox.information(
+                        self, "Reinstall Complete",
+                        "Arvor Linux was successfully restored from recovery storage via rsync!\n\n"
+                        "Configured users:\n"
+                        "- root (password: root)\n"
+                        "- arvor (password: arvor) [sudo]\n\n"
+                        "Press OK to return to main menu."
+                    )
+                else:
+                    QMessageBox.critical(
+                        self, "Reinstall Failed",
+                        "Failed to reinstall Arvor Linux. Check the log output for details."
+                    )
 
         elif row == 2:  # Merge snapshot
             self.current_snap_action = "merge"

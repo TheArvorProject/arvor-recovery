@@ -35,7 +35,7 @@ lvm_dev = p4
 
 ---
 
-## 2. Povoamento da Partição de Recuperação
+## 2. Povoamento da Partição de Recuperação (Debootstrap & Standalone)
 
 Após a criação do filesystem na partição `p3`:
 
@@ -44,14 +44,16 @@ rec_mnt = "/mnt/recovery_staging"
 os.makedirs(rec_mnt, exist_ok=True)
 self.run_cmd(f"mount {p3} {rec_mnt}")
 
-# Cria estrutura de boot do recovery
-os.makedirs(f"{rec_mnt}/live", exist_ok=True)
-os.makedirs(f"{rec_mnt}/boot/grub", exist_ok=True)
+# 1. Debootstrap minimal na partição de recuperação
+self.run_cmd(f"debootstrap --variant=minbase --arch=amd64 --include=python3,python3-pyqt6,lvm2,xfsprogs,e2fsprogs,parted,util-linux,pciutils,iproute2,systemd-sysv,bash,coreutils,kmod,linux-image-amd64,sudo,rsync,grub-efi-amd64-signed trixie {rec_mnt} http://deb.debian.org/debian")
 
-# Copia kernel e initramfs de recuperação
-self.run_cmd(f"cp /tmp/iso_build/live/vmlinuz {rec_mnt}/live/vmlinuz")
-self.run_cmd(f"cp /tmp/iso_build/live/initrd.img {rec_mnt}/live/initrd.img")
-self.run_cmd(f"cp /tmp/arvor_recovery.squashfs {rec_mnt}/live/filesystem.squashfs")
+# 2. Configuração de credenciais padrão
+self.run_cmd(f'chroot {rec_mnt} /bin/sh -c "echo \\"root:root\\" | chpasswd"')
+self.run_cmd(f'chroot {rec_mnt} /bin/sh -c "id -u arvor >/dev/null 2>&1 || useradd -m -s /bin/bash -G sudo arvor && echo \\"arvor:arvor\\" | chpasswd"')
+
+# 3. Instalação do Arvor Recovery GUI e Autologin
+# Copia binários e módulos para rec_mnt
+# Configura /etc/systemd/system/getty@tty1.service.d/override.conf para iniciar /usr/bin/arvor-recovery
 
 self.run_cmd(f"umount {rec_mnt}")
 ```
